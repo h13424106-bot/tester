@@ -1,21 +1,10 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  // In a real app, you'd want to handle this more gracefully.
-  // For this context, we assume the key is present.
-  console.warn("API_KEY is not set. AI analysis will not work.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// As per project guidelines, process.env.API_KEY is assumed to be available
+// in the execution environment (e.g., configured in Netlify).
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export async function analyzeSolarData(prompt: string): Promise<string> {
-  if (!API_KEY) {
-    return "API Key not configured. Please set up your environment to use this feature.";
-  }
-  
   try {
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -29,9 +18,11 @@ export async function analyzeSolarData(prompt: string): Promise<string> {
     return response.text;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
+    // Re-throw the error so the calling component's catch block can handle it
+    // and display a proper error message in the UI.
     if (error instanceof Error) {
-        return `An error occurred during analysis: ${error.message}`;
+        throw new Error(`Gemini API Error: ${error.message}`);
     }
-    return "An unknown error occurred during analysis.";
+    throw new Error("An unknown error occurred during AI analysis.");
   }
 }
